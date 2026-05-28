@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database (exclude the binary, keep schema)
+database/libraflow.db
+database/*.db-shm
+database/*.db-wal
+
+# OS
+.DS_Store
+Thumbs.db
+.env
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

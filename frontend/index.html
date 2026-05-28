@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LibraFlow — E-Library Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════════════ */
+:root {
+  --bg:          #0d0f14;
+  --bg-2:        #131720;
+  --bg-3:        #1a1f2e;
+  --bg-card:     #1e2436;
+  --bg-hover:    #252d42;
+  --border:      #2a3148;
+  --border-2:    #313b58;
+  --text:        #e8eaf6;
+  --text-2:      #9ba3c2;
+  --text-3:      #5a6282;
+  --accent:      #6c8ef5;
+  --accent-2:    #a78bfa;
+  --accent-glow: rgba(108,142,245,0.18);
+  --green:       #34d399;
+  --green-bg:    rgba(52,211,153,0.12);
+  --amber:       #fbbf24;
+  --amber-bg:    rgba(251,191,36,0.12);
+  --red:         #f87171;
+  --red-bg:      rgba(248,113,113,0.12);
+  --cyan:        #22d3ee;
+  --pink:        #f472b6;
+  --radius:      12px;
+  --radius-lg:   18px;
+  --shadow:      0 4px 24px rgba(0,0,0,0.4);
+  --shadow-lg:   0 8px 40px rgba(0,0,0,0.6);
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-mono:    'DM Mono', monospace;
+  --sidebar-w:   260px;
+  --transition:  0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── Reset ───────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+button { font-family: var(--font-body); cursor: pointer; border: none; }
+input, select, textarea { font-family: var(--font-body); }
+a { text-decoration: none; color: inherit; }
+img { display: block; max-width: 100%; }
+
+/* ═══════════════════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════════════════ */
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--bg-2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: transform var(--transition);
+}
+
+.sidebar-logo {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-mark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+.logo-text { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; letter-spacing: -0.5px; }
+.logo-sub { font-size: 0.7rem; color: var(--text-3); letter-spacing: 1px; text-transform: uppercase; margin-top: 1px; }
+
+.sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+.nav-section-label {
+  font-size: 0.65rem; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--text-3); padding: 8px 12px 6px; font-weight: 500;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 11px;
+  padding: 10px 12px; border-radius: 10px;
+  color: var(--text-2); font-size: 0.9rem; font-weight: 500;
+  cursor: pointer; transition: all var(--transition); margin-bottom: 2px;
+  position: relative;
+}
+.nav-item:hover { background: var(--bg-hover); color: var(--text); }
+.nav-item.active {
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+.nav-item.active::before {
+  content: '';
+  position: absolute; left: 0; top: 25%; bottom: 25%;
+  width: 3px; border-radius: 0 3px 3px 0;
+  background: var(--accent);
+}
+.nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+.nav-badge {
+  margin-left: auto; background: var(--red-bg); color: var(--red);
+  font-size: 0.7rem; font-weight: 600; padding: 1px 7px; border-radius: 20px;
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+.sys-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sys-stat {
+  background: var(--bg-3); border-radius: 8px; padding: 10px;
+}
+.sys-stat-val { font-size: 1.1rem; font-weight: 600; color: var(--text); }
+.sys-stat-lbl { font-size: 0.65rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── Main ────────────────────────────────────────────────── */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  min-width: 0;
+}
+
+.topbar {
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar-title { font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; }
+.topbar-actions { display: flex; align-items: center; gap: 12px; }
+
+.content { padding: 32px; }
+
+/* ═══════════════════════════════════════════════════════════
+   COMPONENTS
+═══════════════════════════════════════════════════════════ */
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; border-radius: 9px;
+  font-size: 0.875rem; font-weight: 500;
+  transition: all var(--transition);
+}
+.btn-primary {
+  background: var(--accent); color: #fff;
+  box-shadow: 0 0 16px rgba(108,142,245,0.3);
+}
+.btn-primary:hover { background: #5a7ef0; box-shadow: 0 0 24px rgba(108,142,245,0.5); }
+.btn-ghost { background: transparent; color: var(--text-2); border: 1px solid var(--border-2); }
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text); }
+.btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+.btn-danger:hover { background: rgba(248,113,113,0.2); }
+.btn-success { background: var(--green-bg); color: var(--green); border: 1px solid rgba(52,211,153,0.2); }
+.btn-success:hover { background: rgba(52,211,153,0.2); }
+.btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 7px; }
+
+/* ── Cards ───────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+.card-sm { padding: 18px; border-radius: var(--radius); }
+
+/* ── Stats Grid ──────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+.stat-card:hover { border-color: var(--border-2); }
+.stat-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--stat-accent, var(--accent));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.stat-icon {
+  width: 42px; height: 42px;
+  background: var(--stat-bg, var(--accent-glow));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; margin-bottom: 14px;
+}
+.stat-val { font-size: 1.9rem; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+.stat-lbl { font-size: 0.8rem; color: var(--text-3); font-weight: 500; }
+.stat-sub { font-size: 0.75rem; color: var(--text-3); margin-top: 6px; }
+
+/* ── Table ───────────────────────────────────────────────── */
+.table-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--bg-3); }
+th {
+  text-align: left; padding: 13px 18px;
+  font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text-3); font-weight: 600; border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+td {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  font-size: 0.875rem; vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tbody tr { transition: background var(--transition); }
+tbody tr:hover { background: var(--bg-hover); }
+
+/* ── Badges ──────────────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.3px;
+}
+.badge::before { content: '●'; font-size: 0.55rem; }
+.badge-green  { background: var(--green-bg);  color: var(--green); }
+.badge-red    { background: var(--red-bg);    color: var(--red);   }
+.badge-amber  { background: var(--amber-bg);  color: var(--amber); }
+.badge-blue   { background: rgba(108,142,245,0.12); color: var(--accent); }
+.badge-purple { background: rgba(167,139,250,0.12); color: var(--accent-2); }
+
+/* ── Forms ───────────────────────────────────────────────── */
+.form-group { margin-bottom: 18px; }
+.form-label {
+  display: block; margin-bottom: 7px;
+  font-size: 0.8rem; font-weight: 500; color: var(--text-2); letter-spacing: 0.3px;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%; background: var(--bg-3);
+  border: 1px solid var(--border); border-radius: 9px;
+  color: var(--text); padding: 10px 14px; font-size: 0.875rem;
+  transition: border-color var(--transition);
+  outline: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.form-select { appearance: none; cursor: pointer; }
+.form-textarea { resize: vertical; min-height: 90px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-error { font-size: 0.78rem; color: var(--red); margin-top: 5px; }
+
+/* ── Search Bar ──────────────────────────────────────────── */
+.search-bar {
+  position: relative;
+  display: flex; align-items: center;
+}
+.search-icon {
+  position: absolute; left: 13px; color: var(--text-3); font-size: 1rem; pointer-events: none;
+}
+.search-bar input {
+  background: var(--bg-3); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text);
+  padding: 10px 14px 10px 38px;
+  font-size: 0.875rem; outline: none; width: 280px;
+  transition: all var(--transition);
+}
+.search-bar input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  width: 340px;
+}
+
+/* ── Modal ───────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.15s ease;
+}
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-lg);
+  width: 100%; max-width: 560px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.2s ease;
+}
+.modal-header {
+  padding: 22px 26px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-title { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; }
+.modal-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--bg-3); border: 1px solid var(--border);
+  color: var(--text-2); font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all var(--transition);
+}
+.modal-close:hover { background: var(--red-bg); color: var(--red); border-color: transparent; }
+.modal-body { padding: 22px 26px; }
+.modal-footer {
+  padding: 16px 26px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 10px; justify-content: flex-end;
+}
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+@keyframes slideUp { from { transform: translateY(20px); opacity:0 } to { transform: translateY(0); opacity:1 } }
+
+/* ── Book Cover ──────────────────────────────────────────── */
+.book-cover {
+  width: 42px; height: 54px; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; flex-shrink: 0;
+  box-shadow: 2px 3px 10px rgba(0,0,0,0.4);
+  position: relative; overflow: hidden;
+}
+.book-cover::after {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+  background: rgba(0,0,0,0.25);
+}
+
+/* ── Member Avatar ───────────────────────────────────────── */
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+  color: #fff;
+}
+
+/* ── Page Header ─────────────────────────────────────────── */
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.page-title { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; }
+.page-sub { font-size: 0.85rem; color: var(--text-3); margin-top: 3px; }
+.page-actions { display: flex; align-items: center; gap: 10px; }
+
+/* ── Two-col grid ────────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+/* ── Tabs ────────────────────────────────────────────────── */
+.tabs {
+  display: flex; gap: 4px; background: var(--bg-3);
+  padding: 4px; border-radius: 10px; width: fit-content;
+}
+.tab {
+  padding: 7px 16px; border-radius: 7px;
+  font-size: 0.85rem; font-weight: 500; color: var(--text-2);
+  cursor: pointer; transition: all var(--transition);
+}
+.tab.active { background: var(--bg-card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+
+/* ── Toast ───────────────────────────────────────────────── */
+.toast-container {
+  position: fixed; bottom: 24px; right: 24px; z-index: 999;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  background: var(--bg-card); border: 1px solid var(--border-2);
+  border-radius: 11px; padding: 12px 18px;
+  box-shadow: var(--shadow); min-width: 280px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.875rem; font-weight: 500;
+  animation: slideInRight 0.25s ease;
+}
+.toast.success { border-left: 3px solid var(--green); }
+.toast.error   { border-left: 3px solid var(--red); }
+.toast.info    { border-left: 3px solid var(--accent); }
+@keyframes slideInRight { from { transform: translateX(100%); opacity:0 } to { transform: translateX(0); opacity:1 } }
+
+/* ── Empty State ─────────────────────────────────────────── */
+.empty-state {
+  text-align: center; padding: 60px 24px;
+  color: var(--text-3);
+}
+.empty-icon { font-size: 3rem; margin-bottom: 14px; opacity: 0.5; }
+.empty-title { font-size: 1rem; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+.empty-sub { font-size: 0.85rem; }
+
+/* ── Loading ─────────────────────────────────────────────── */
+.loading {
+  display: flex; align-items: center; justify-content: center;
+  padding: 60px; color: var(--text-3); gap: 12px;
+}
+.spinner {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--border-2);
+  border-top-color: var(--accent);
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg) } }
+
+/* ── Fine display ────────────────────────────────────────── */
+.fine-amount {
+  font-family: var(--font-mono); font-size: 0.85rem;
+  color: var(--red); font-weight: 500;
+}
+
+/* ── Dashboard Charts ────────────────────────────────────── */
+.bar-chart { display: flex; flex-direction: column; gap: 10px; }
+.bar-row { display: flex; align-items: center; gap: 10px; }
+.bar-label { font-size: 0.78rem; color: var(--text-2); width: 90px; flex-shrink: 0; }
+.bar-track { flex: 1; background: var(--bg-3); border-radius: 4px; height: 8px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+.bar-count { font-size: 0.75rem; color: var(--text-3); width: 24px; text-align: right; flex-shrink: 0; }
+
+/* ── Activity list ───────────────────────────────────────── */
+.activity-list { display: flex; flex-direction: column; gap: 10px; }
+.activity-item {
+  display: flex; align-items: center; gap: 13px;
+  padding: 12px 16px; background: var(--bg-3);
+  border-radius: 10px; border: 1px solid var(--border);
+}
+.activity-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.activity-body { flex: 1; min-width: 0; }
+.activity-title { font-size: 0.875rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.activity-sub { font-size: 0.78rem; color: var(--text-3); margin-top: 2px; }
+.activity-time { font-size: 0.72rem; color: var(--text-3); white-space: nowrap; }
+
+/* ── Color picker ────────────────────────────────────────── */
+.color-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.color-swatch {
+  width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+  border: 2px solid transparent; transition: all var(--transition);
+}
+.color-swatch.selected { border-color: #fff; transform: scale(1.15); }
+
+/* ── Overdue Banner ──────────────────────────────────────── */
+.overdue-banner {
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.25);
+  border-radius: var(--radius); padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.overdue-banner-icon { font-size: 1.3rem; }
+.overdue-banner-text { font-size: 0.875rem; color: var(--red); font-weight: 500; }
+
+/* ── API status ──────────────────────────────────────────── */
+.api-status {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 0.75rem; color: var(--text-3);
+}
+.api-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); }
+.api-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.api-dot.offline { background: var(--red); }
+
+/* ── Info pill ───────────────────────────────────────────── */
+.info-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.78rem; color: var(--text-3); font-family: var(--font-mono);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════════ */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+.mt-1 { margin-top: 4px; }
+.mt-2 { margin-top: 8px; }
+.mt-4 { margin-top: 16px; }
+.mb-4 { margin-bottom: 16px; }
+.mb-6 { margin-bottom: 24px; }
+.fw-600 { font-weight: 600; }
+.text-sm { font-size: 0.82rem; }
+.text-xs { font-size: 0.75rem; }
+.text-muted { color: var(--text-3); }
+.text-2 { color: var(--text-2); }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mono { font-family: var(--font-mono); }
+.w-full { width: 100%; }
+</style>
+</head>
+<body>
+
+<div class="layout" id="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">📚</div>
+        <div>
+          <div class="logo-text">LibraFlow</div>
+          <div class="logo-sub">Library System</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <div class="nav-item active" onclick="navigate('dashboard')" id="nav-dashboard">
+        <span class="nav-icon">🏠</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="navigate('books')" id="nav-books">
+        <span class="nav-icon">📖</span> Books
+      </div>
+      <div class="nav-item" onclick="navigate('members')" id="nav-members">
+        <span class="nav-icon">👥</span> Members
+      </div>
+
+      <div class="nav-section-label" style="margin-top:12px">Circulation</div>
+      <div class="nav-item" onclick="navigate('loans')" id="nav-loans">
+        <span class="nav-icon">🔄</span> Loans
+      </div>
+      <div class="nav-item" onclick="navigate('overdue')" id="nav-overdue">
+        <span class="nav-icon">⚠️</span> Overdue
+        <span class="nav-badge" id="overdue-badge" style="display:none"></span>
+      </div>
+
+      <div class="nav-section-label" style="margin-top:12px">Reference</div>
+      <div class="nav-item" onclick="navigate('authors')" id="nav-authors">
+        <span class="nav-icon">✍️</span> Authors
+      </div>
+      <div class="nav-item" onclick="navigate('categories')" id="nav-categories">
+        <span class="nav-icon">🏷️</span> Categories
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sys-stats" id="sys-stats">
+        <div class="sys-stat"><div class="sys-stat-val" id="sf-books">—</div><div class="sys-stat-lbl">Books</div></div>
+        <div class="sys-stat"><div class="sys-stat-val" id="sf-members">—</div><div class="sys-stat-lbl">Members</div></div>
+        <div class="sys-stat"><div class="sys-stat-val" id="sf-loans">—</div><div class="sys-stat-lbl">On Loan</div></div>
+        <div class="sys-stat"><div class="sys-stat-val" id="sf-overdue" style="color:var(--red)">—</div><div class="sys-stat-lbl">Overdue</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+      </div>
+      <div class="topbar-actions">
+        <div class="api-status">
+          <div class="api-dot" id="api-dot"></div>
+          <span id="api-status-text">Connecting…</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content" id="content">
+      <div class="loading"><div class="spinner"></div> Loading…</div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" style="display:none" onclick="closeModalOnOverlay(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Modal</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CONFIG & STATE
+// ═══════════════════════════════════════════════════════════
+const API = 'http://localhost:3001/api';
+let currentPage = 'dashboard';
+let dashboardData = null;
+
+const COLORS = ['#6366f1','#8b5cf6','#ec4899','#f43f5e','#f59e0b','#10b981','#06b6d4','#3b82f6'];
+
+// ── Avatar color from name ────────────────────────────────
+function avatarColor(name) {
+  const colors = ['#6366f1','#8b5cf6','#ec4899','#10b981','#06b6d4','#f59e0b','#f43f5e','#3b82f6'];
+  let hash = 0;
+  for (const c of name) hash = (hash * 31 + c.charCodeAt(0)) & 0xffffffff;
+  return colors[Math.abs(hash) % colors.length];
+}
+function initials(name) {
+  return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+}
+
+// ═══════════════════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════════════════
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'API error');
+  return data;
+}
+
+// ── Health check ──────────────────────────────────────────
+async function checkHealth() {
+  try {
+    await api('/health');
+    document.getElementById('api-dot').className = 'api-dot online';
+    document.getElementById('api-status-text').textContent = 'API Connected';
+  } catch {
+    document.getElementById('api-dot').className = 'api-dot offline';
+    document.getElementById('api-status-text').textContent = 'API Offline — Demo Mode';
+    useMockData();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MOCK DATA (offline fallback)
+// ═══════════════════════════════════════════════════════════
+const today = new Date();
+const d = (days) => new Date(today.getTime() + days*86400000).toISOString().split('T')[0];
+
+const MOCK = {
+  dashboard: {
+    totalBooks: 8, totalMembers: 5, activeLoans: 5, overdueLoans: 2, totalFines: 135,
+    recentLoans: [
+      {id:1, title:'1984', member_name:'Ahmed Raza', issued_at: d(-20), due_date: d(-6), returned_at: null, cover_color:'#6366f1'},
+      {id:2, title:'Harry Potter & the Sorcerer', member_name:'Sara Khan', issued_at: d(-10), due_date: d(4), returned_at: null, cover_color:'#ec4899'},
+      {id:3, title:'Clean Code', member_name:'Usman Ali', issued_at: d(-25), due_date: d(-11), returned_at: null, cover_color:'#8b5cf6'},
+      {id:4, title:'Cosmos', member_name:'Fatima Malik', issued_at: d(-5), due_date: d(9), returned_at: null, cover_color:'#06b6d4'},
+      {id:5, title:'1984', member_name:'Zainab Hussain', issued_at: d(-30), due_date: d(-16), returned_at: null, cover_color:'#6366f1'},
+    ],
+    categoryStats: [
+      {name:'Fiction', color:'#6366f1', book_count:2, on_loan:2},
+      {name:'Science', color:'#06b6d4', book_count:2, on_loan:1},
+      {name:'Technology', color:'#8b5cf6', book_count:1, on_loan:1},
+      {name:'History', color:'#f59e0b', book_count:1, on_loan:0},
+      {name:'Literature', color:'#ec4899', book_count:2, on_loan:1},
+    ]
+  },
+  books: [
+    {id:1,title:'1984',isbn:'978-0451524935',category_name:'Fiction',category_color:'#6366f1',published_year:1949,total_copies:5,available_copies:3,description:'A dystopian novel.',cover_color:'#6366f1',authors:'George Orwell'},
+    {id:2,title:'Dune',isbn:'978-0441013593',category_name:'Fiction',category_color:'#6366f1',published_year:1965,total_copies:3,available_copies:3,description:'Epic sci-fi.',cover_color:'#f59e0b',authors:'Frank Herbert'},
+    {id:3,title:'Harry Potter & the Sorcerer',isbn:'978-0439708180',category_name:'Literature',category_color:'#ec4899',published_year:1997,total_copies:6,available_copies:5,description:"A wizard's journey.",cover_color:'#ec4899',authors:'J.K. Rowling'},
+    {id:4,title:'Sapiens',isbn:'978-0062316097',category_name:'History',category_color:'#f59e0b',published_year:2011,total_copies:4,available_copies:4,description:'History of humankind.',cover_color:'#10b981',authors:'Yuval Noah Harari'},
+    {id:5,title:'Clean Code',isbn:'978-0132350884',category_name:'Technology',category_color:'#8b5cf6',published_year:2008,total_copies:3,available_copies:1,description:'Agile software.',cover_color:'#8b5cf6',authors:'Robert C. Martin'},
+    {id:6,title:'Crime and Punishment',isbn:'978-0486415871',category_name:'Literature',category_color:'#ec4899',published_year:1866,total_copies:2,available_copies:2,description:'Guilt and redemption.',cover_color:'#f43f5e',authors:'Fyodor Dostoevsky'},
+    {id:7,title:'Cosmos',isbn:'978-0345539434',category_name:'Science',category_color:'#06b6d4',published_year:1980,total_copies:4,available_copies:3,description:'Space and time.',cover_color:'#06b6d4',authors:'Carl Sagan'},
+    {id:8,title:'A Brief History of Time',isbn:'978-0553380163',category_name:'Science',category_color:'#06b6d4',published_year:1988,total_copies:3,available_copies:3,description:'Big Bang to black holes.',cover_color:'#3b82f6',authors:'Stephen Hawking'},
+  ],
+  members: [
+    {id:1,name:'Ahmed Raza',email:'ahmed.raza@email.com',phone:'+92-300-1234567',address:'Gulberg III, Lahore',status:'active',active_loans:1,joined_at:d(-180)},
+    {id:2,name:'Sara Khan',email:'sara.khan@email.com',phone:'+92-321-2345678',address:'DHA Phase 5, Lahore',status:'active',active_loans:1,joined_at:d(-150)},
+    {id:3,name:'Usman Ali',email:'usman.ali@email.com',phone:'+92-333-3456789',address:'Model Town, Lahore',status:'active',active_loans:1,joined_at:d(-120)},
+    {id:4,name:'Fatima Malik',email:'fatima.malik@email.com',phone:'+92-345-4567890',address:'Johar Town, Lahore',status:'active',active_loans:1,joined_at:d(-90)},
+    {id:5,name:'Bilal Sheikh',email:'bilal.sheikh@email.com',phone:'+92-311-5678901',address:'Bahria Town, Lahore',status:'suspended',active_loans:0,joined_at:d(-60)},
+    {id:6,name:'Zainab Hussain',email:'zainab.h@email.com',phone:'+92-322-6789012',address:'Garden Town, Lahore',status:'active',active_loans:1,joined_at:d(-45)},
+  ],
+  loans: [
+    {id:1,book_title:'1984',cover_color:'#6366f1',member_name:'Ahmed Raza',member_email:'ahmed.raza@email.com',issued_at:d(-20),due_date:d(-6),returned_at:null,computed_fine:30,days_overdue:6,fine_paid:0},
+    {id:2,book_title:'Harry Potter & the Sorcerer',cover_color:'#ec4899',member_name:'Sara Khan',member_email:'sara.khan@email.com',issued_at:d(-10),due_date:d(4),returned_at:null,computed_fine:0,days_overdue:0,fine_paid:0},
+    {id:3,book_title:'Clean Code',cover_color:'#8b5cf6',member_name:'Usman Ali',member_email:'usman.ali@email.com',issued_at:d(-25),due_date:d(-11),returned_at:null,computed_fine:55,days_overdue:11,fine_paid:0},
+    {id:4,book_title:'Cosmos',cover_color:'#06b6d4',member_name:'Fatima Malik',member_email:'fatima.malik@email.com',issued_at:d(-5),due_date:d(9),returned_at:null,computed_fine:0,days_overdue:0,fine_paid:0},
+    {id:5,book_title:'1984',cover_color:'#6366f1',member_name:'Zainab Hussain',member_email:'zainab.h@email.com',issued_at:d(-30),due_date:d(-16),returned_at:null,computed_fine:80,days_overdue:16,fine_paid:0},
+  ],
+  categories: [
+    {id:1,name:'Fiction',description:'Novels and imaginative literature',color:'#6366f1'},
+    {id:2,name:'Science',description:'Physics, chemistry, biology',color:'#06b6d4'},
+    {id:3,name:'Technology',description:'Computing, programming, engineering',color:'#8b5cf6'},
+    {id:4,name:'History',description:'World history and biographies',color:'#f59e0b'},
+    {id:5,name:'Philosophy',description:'Ethics, logic, metaphysics',color:'#10b981'},
+    {id:6,name:'Self-Help',description:'Personal development',color:'#f43f5e'},
+    {id:7,name:'Mathematics',description:'Pure and applied mathematics',color:'#3b82f6'},
+    {id:8,name:'Literature',description:'Classic and contemporary literary works',color:'#ec4899'},
+  ],
+  authors: [
+    {id:1,name:'George Orwell',bio:'English novelist, dystopian fiction',nationality:'British'},
+    {id:2,name:'Frank Herbert',bio:'Author of the Dune series',nationality:'American'},
+    {id:3,name:'J.K. Rowling',bio:'Author of the Harry Potter series',nationality:'British'},
+    {id:4,name:'Yuval Noah Harari',bio:'Historian, author of Sapiens',nationality:'Israeli'},
+    {id:5,name:'Robert C. Martin',bio:'Software engineer, Uncle Bob',nationality:'American'},
+    {id:6,name:'Fyodor Dostoevsky',bio:'Russian novelist and philosopher',nationality:'Russian'},
+    {id:7,name:'Carl Sagan',bio:'Astronomer and science communicator',nationality:'American'},
+    {id:8,name:'Stephen Hawking',bio:'Theoretical physicist and cosmologist',nationality:'British'},
+  ]
+};
+let useMock = false;
+function useMockData() {
+  useMock = true;
+  updateSidebarStats({ totalBooks:8, totalMembers:5, activeLoans:5, overdueLoans:2 });
+  document.getElementById('overdue-badge').textContent = '2';
+  document.getElementById('overdue-badge').style.display = '';
+}
+
+// Unified fetch (live or mock)
+async function fetchData(endpoint, query='') {
+  if (useMock) {
+    const key = endpoint.replace('/','');
+    if (key === 'dashboard') return MOCK.dashboard;
+    if (key === 'books') return MOCK.books.filter(b => !query || b.title.toLowerCase().includes(query.toLowerCase()));
+    if (key === 'members') return MOCK.members;
+    if (key.startsWith('loans')) {
+      const params = new URLSearchParams(query);
+      const st = params.get('status') || '';
+      if (st === 'overdue') return MOCK.loans.filter(l=>l.days_overdue>0);
+      if (st === 'active')  return MOCK.loans.filter(l=>!l.returned_at);
+      return MOCK.loans;
+    }
+    if (key === 'categories') return MOCK.categories;
+    if (key === 'authors')    return MOCK.authors;
+    return [];
+  }
+  return api('/' + endpoint + (query ? '?' + query : ''));
+}
+
+// ═══════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════
+const PAGE_TITLES = {
+  dashboard: 'Dashboard', books: 'Book Catalog', members: 'Members',
+  loans: 'Loan Management', overdue: 'Overdue Books',
+  authors: 'Authors', categories: 'Categories'
+};
+
+function navigate(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('nav-' + page)?.classList.add('active');
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[page] || page;
+  renderPage(page);
+}
+
+async function renderPage(page) {
+  setContent('<div class="loading"><div class="spinner"></div> Loading…</div>');
+  try {
+    if (page === 'dashboard')   await renderDashboard();
+    else if (page === 'books')  await renderBooks();
+    else if (page === 'members')await renderMembers();
+    else if (page === 'loans')  await renderLoans('active');
+    else if (page === 'overdue')await renderOverdue();
+    else if (page === 'authors')await renderAuthors();
+    else if (page === 'categories') await renderCategories();
+  } catch (err) {
+    setContent(`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">${err.message}</div><div class="empty-sub">Check the backend is running on port 3001</div></div>`);
+  }
+}
+
+function setContent(html) {
+  document.getElementById('content').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════
+async function renderDashboard() {
+  const data = await fetchData('dashboard');
+  dashboardData = data;
+  updateSidebarStats(data);
+
+  const maxBooks = Math.max(...data.categoryStats.map(c=>c.book_count), 1);
+
+  setContent(`
+    <div class="stats-grid">
+      <div class="stat-card" style="--stat-accent:var(--accent);--stat-bg:var(--accent-glow)">
+        <div class="stat-icon">📚</div>
+        <div class="stat-val">${data.totalBooks}</div>
+        <div class="stat-lbl">Total Books</div>
+        <div class="stat-sub">In catalog</div>
+      </div>
+      <div class="stat-card" style="--stat-accent:var(--green);--stat-bg:var(--green-bg)">
+        <div class="stat-icon">👥</div>
+        <div class="stat-val">${data.totalMembers}</div>
+        <div class="stat-lbl">Active Members</div>
+        <div class="stat-sub">Registered</div>
+      </div>
+      <div class="stat-card" style="--stat-accent:var(--cyan);--stat-bg:rgba(34,211,238,0.1)">
+        <div class="stat-icon">🔄</div>
+        <div class="stat-val">${data.activeLoans}</div>
+        <div class="stat-lbl">Books on Loan</div>
+        <div class="stat-sub">Currently out</div>
+      </div>
+      <div class="stat-card" style="--stat-accent:var(--red);--stat-bg:var(--red-bg)">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-val">${data.overdueLoans}</div>
+        <div class="stat-lbl">Overdue</div>
+        <div class="stat-sub">₨ ${data.totalFines} fines owed</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <div class="fw-600">Recent Activity</div>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('loans')">View all →</button>
+        </div>
+        <div class="activity-list">
+          ${data.recentLoans.map(l => {
+            const due = new Date(l.due_date);
+            const isOverdue = !l.returned_at && due < new Date();
+            return `
+            <div class="activity-item">
+              <div class="book-cover" style="background:${l.cover_color}20;color:${l.cover_color}">📖</div>
+              <div class="activity-body">
+                <div class="activity-title">${l.title}</div>
+                <div class="activity-sub">${l.member_name} · Due ${formatDate(l.due_date)}</div>
+              </div>
+              ${isOverdue
+                ? '<span class="badge badge-red">Overdue</span>'
+                : l.returned_at
+                  ? '<span class="badge badge-green">Returned</span>'
+                  : '<span class="badge badge-blue">Active</span>'
+              }
+            </div>`
+          }).join('')}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <div class="fw-600">Books by Category</div>
+        </div>
+        <div class="bar-chart">
+          ${data.categoryStats.map(c => `
+            <div class="bar-row">
+              <div class="bar-label truncate">${c.name}</div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:${(c.book_count/maxBooks*100)}%;background:${c.color}"></div>
+              </div>
+              <div class="bar-count">${c.book_count}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border)">
+          <div class="flex gap-4" style="gap:24px">
+            <div>
+              <div style="font-size:1.4rem;font-weight:700">${data.totalBooks}</div>
+              <div class="text-xs text-muted">Total Titles</div>
+            </div>
+            <div>
+              <div style="font-size:1.4rem;font-weight:700;color:var(--green)">${data.totalBooks - data.activeLoans}</div>
+              <div class="text-xs text-muted">Available</div>
+            </div>
+            <div>
+              <div style="font-size:1.4rem;font-weight:700;color:var(--red)">₨ ${data.totalFines}</div>
+              <div class="text-xs text-muted">Fines Owed</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <div class="card card-sm" style="cursor:pointer" onclick="navigate('books')">
+        <div style="font-size:1.8rem;margin-bottom:8px">📖</div>
+        <div class="fw-600">Manage Books</div>
+        <div class="text-sm text-muted mt-1">Add, edit, delete book records</div>
+      </div>
+      <div class="card card-sm" style="cursor:pointer" onclick="navigate('members')">
+        <div style="font-size:1.8rem;margin-bottom:8px">👥</div>
+        <div class="fw-600">Manage Members</div>
+        <div class="text-sm text-muted mt-1">Member registration & status</div>
+      </div>
+      <div class="card card-sm" style="cursor:pointer" onclick="openIssueLoanModal()">
+        <div style="font-size:1.8rem;margin-bottom:8px">➕</div>
+        <div class="fw-600">Issue a Book</div>
+        <div class="text-sm text-muted mt-1">Create a new loan record</div>
+      </div>
+    </div>
+  `);
+}
+
+function updateSidebarStats(data) {
+  document.getElementById('sf-books').textContent   = data.totalBooks;
+  document.getElementById('sf-members').textContent = data.totalMembers;
+  document.getElementById('sf-loans').textContent   = data.activeLoans;
+  document.getElementById('sf-overdue').textContent = data.overdueLoans;
+  if (data.overdueLoans > 0) {
+    document.getElementById('overdue-badge').textContent = data.overdueLoans;
+    document.getElementById('overdue-badge').style.display = '';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// BOOKS
+// ═══════════════════════════════════════════════════════════
+let bookSearch = '';
+async function renderBooks() {
+  const [books, categories] = await Promise.all([
+    fetchData('books', bookSearch ? `search=${bookSearch}` : ''),
+    fetchData('categories')
+  ]);
+
+  setContent(`
+    <div class="page-header">
+      <div>
+        <div class="page-title">Book Catalog</div>
+        <div class="page-sub">${books.length} book${books.length!==1?'s':''} found</div>
+      </div>
+      <div class="page-actions">
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="Search books or authors…" value="${bookSearch}"
+            oninput="bookSearch=this.value;debounceBooks()" />
+        </div>
+        <button class="btn btn-primary" onclick="openBookModal()">+ Add Book</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Book</th>
+            <th>Author(s)</th>
+            <th>Category</th>
+            <th>Year</th>
+            <th>Copies</th>
+            <th>Available</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${books.length ? books.map(b => `
+          <tr>
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="book-cover" style="background:${b.cover_color}22;color:${b.cover_color}">📖</div>
+                <div>
+                  <div class="fw-600">${b.title}</div>
+                  <div class="text-xs mono text-muted">${b.isbn || '—'}</div>
+                </div>
+              </div>
+            </td>
+            <td class="text-2">${b.authors || '—'}</td>
+            <td>
+              ${b.category_name ? `<span class="badge" style="background:${b.category_color}18;color:${b.category_color};border:1px solid ${b.category_color}30">●&nbsp;${b.category_name}</span>` : '—'}
+            </td>
+            <td class="mono text-muted">${b.published_year || '—'}</td>
+            <td class="mono">${b.total_copies}</td>
+            <td>
+              <span class="badge ${b.available_copies === 0 ? 'badge-red' : b.available_copies < b.total_copies ? 'badge-amber' : 'badge-green'}">
+                ${b.available_copies} / ${b.total_copies}
+              </span>
+            </td>
+            <td>
+              <div class="flex gap-2">
+                <button class="btn btn-ghost btn-sm" onclick="openBookModal(${JSON.stringify(b).replace(/"/g,'&quot;')})">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteBook(${b.id},'${b.title.replace(/'/g,"\\'")}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+          `).join('') : `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📚</div><div class="empty-title">No books found</div><div class="empty-sub">Try a different search or add a new book</div></div></td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `);
+}
+
+let booksDebounce;
+function debounceBooks() {
+  clearTimeout(booksDebounce);
+  booksDebounce = setTimeout(() => renderBooks(), 300);
+}
+
+async function openBookModal(book = null) {
+  const categories = await fetchData('categories');
+  const authors    = await fetchData('authors');
+  const isEdit = !!book;
+
+  showModal(isEdit ? 'Edit Book' : 'Add New Book', `
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        <input class="form-input" id="b-title" value="${book?.title || ''}" placeholder="Book title">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ISBN</label>
+        <input class="form-input" id="b-isbn" value="${book?.isbn || ''}" placeholder="978-…">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="b-cat">
+          <option value="">— Select —</option>
+          ${categories.map(c=>`<option value="${c.id}" ${book?.category_id==c.id?'selected':''}>${c.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Published Year</label>
+        <input class="form-input" id="b-year" type="number" value="${book?.published_year || ''}" placeholder="e.g. 1984">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Total Copies</label>
+      <input class="form-input" id="b-copies" type="number" min="1" value="${book?.total_copies || 1}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-textarea" id="b-desc" placeholder="Short summary…">${book?.description || ''}</textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Cover Color</label>
+      <div class="color-picker" id="b-colors">
+        ${COLORS.map(c=>`<div class="color-swatch ${(book?.cover_color||COLORS[0])===c?'selected':''}" style="background:${c}" onclick="selectColor('${c}')" data-color="${c}"></div>`).join('')}
+      </div>
+    </div>
+  `, [
+    { label: isEdit ? 'Save Changes' : 'Add Book', cls: 'btn-primary', action: () => saveBook(book?.id) },
+    { label: 'Cancel', cls: 'btn-ghost', action: closeModal }
+  ]);
+}
+
+function selectColor(color) {
+  document.querySelectorAll('.color-swatch').forEach(el => {
+    el.classList.toggle('selected', el.dataset.color === color);
+  });
+}
+
+async function saveBook(id = null) {
+  const title = document.getElementById('b-title').value.trim();
+  if (!title) { toast('Title is required', 'error'); return; }
+  const selected = document.querySelector('.color-swatch.selected');
+
+  const payload = {
+    title,
+    isbn: document.getElementById('b-isbn').value.trim() || null,
+    category_id: document.getElementById('b-cat').value || null,
+    published_year: document.getElementById('b-year').value || null,
+    total_copies: parseInt(document.getElementById('b-copies').value) || 1,
+    description: document.getElementById('b-desc').value.trim() || null,
+    cover_color: selected ? selected.dataset.color : '#6366f1',
+  };
+
+  if (useMock) {
+    if (id) {
+      const idx = MOCK.books.findIndex(b=>b.id===id);
+      if (idx>=0) Object.assign(MOCK.books[idx], payload);
+      toast('Book updated (demo mode)', 'success');
+    } else {
+      MOCK.books.push({id: Date.now(), ...payload, authors:'', available_copies: payload.total_copies});
+      toast('Book added (demo mode)', 'success');
+    }
+    closeModal(); renderBooks(); return;
+  }
+
+  try {
+    if (id) {
+      await api(`/books/${id}`, { method:'PUT', body: payload });
+      toast('Book updated successfully', 'success');
+    } else {
+      await api('/books', { method:'POST', body: payload });
+      toast('Book added successfully', 'success');
+    }
+    closeModal(); renderBooks();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function deleteBook(id, title) {
+  if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+  if (useMock) {
+    MOCK.books = MOCK.books.filter(b=>b.id!==id);
+    toast('Book deleted (demo mode)', 'success');
+    renderBooks(); return;
+  }
+  try {
+    await api(`/books/${id}`, { method:'DELETE' });
+    toast('Book deleted', 'success');
+    renderBooks();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MEMBERS
+// ═══════════════════════════════════════════════════════════
+let memberSearch = '';
+async function renderMembers() {
+  const members = await fetchData('members', memberSearch ? `search=${memberSearch}` : '');
+
+  setContent(`
+    <div class="page-header">
+      <div>
+        <div class="page-title">Members</div>
+        <div class="page-sub">${members.length} member${members.length!==1?'s':''}</div>
+      </div>
+      <div class="page-actions">
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="Search name or email…" value="${memberSearch}"
+            oninput="memberSearch=this.value;debounceMembers()" />
+        </div>
+        <button class="btn btn-primary" onclick="openMemberModal()">+ Add Member</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Member</th><th>Email</th><th>Phone</th><th>Status</th><th>Active Loans</th><th>Joined</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          ${members.length ? members.map(m => `
+          <tr>
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="avatar" style="background:${avatarColor(m.name)}">${initials(m.name)}</div>
+                <div>
+                  <div class="fw-600">${m.name}</div>
+                  <div class="text-xs text-muted">${m.address || '—'}</div>
+                </div>
+              </div>
+            </td>
+            <td class="mono text-sm">${m.email}</td>
+            <td class="text-2">${m.phone || '—'}</td>
+            <td>
+              <span class="badge ${m.status==='active'?'badge-green':m.status==='suspended'?'badge-red':'badge-amber'}">
+                ${m.status}
+              </span>
+            </td>
+            <td>
+              ${m.active_loans > 0
+                ? `<span class="badge badge-blue">${m.active_loans} book${m.active_loans>1?'s':''}</span>`
+                : '<span class="text-muted text-sm">None</span>'}
+            </td>
+            <td class="text-sm text-muted">${formatDate(m.joined_at)}</td>
+            <td>
+              <div class="flex gap-2">
+                <button class="btn btn-ghost btn-sm" onclick='openMemberModal(${JSON.stringify(m).replace(/'/g,"&#39;")})'>Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteMember(${m.id},'${m.name.replace(/'/g,"\\'")}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+          `).join('') : `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">No members found</div></div></td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `);
+}
+
+let membersDebounce;
+function debounceMembers() {
+  clearTimeout(membersDebounce);
+  membersDebounce = setTimeout(() => renderMembers(), 300);
+}
+
+function openMemberModal(member = null) {
+  const isEdit = !!member;
+  showModal(isEdit ? 'Edit Member' : 'Add New Member', `
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input class="form-input" id="m-name" value="${member?.name || ''}" placeholder="Full name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input class="form-input" id="m-email" type="email" value="${member?.email || ''}" placeholder="email@example.com">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input class="form-input" id="m-phone" value="${member?.phone || ''}" placeholder="+92-300-…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="m-status">
+          <option value="active"    ${member?.status==='active'?'selected':''}>Active</option>
+          <option value="suspended" ${member?.status==='suspended'?'selected':''}>Suspended</option>
+          <option value="expired"   ${member?.status==='expired'?'selected':''}>Expired</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Address</label>
+      <textarea class="form-textarea" id="m-address" placeholder="Home address" style="min-height:70px">${member?.address || ''}</textarea>
+    </div>
+  `, [
+    { label: isEdit ? 'Save Changes' : 'Add Member', cls: 'btn-primary', action: () => saveMember(member?.id) },
+    { label: 'Cancel', cls: 'btn-ghost', action: closeModal }
+  ]);
+}
+
+async function saveMember(id = null) {
+  const name  = document.getElementById('m-name').value.trim();
+  const email = document.getElementById('m-email').value.trim();
+  if (!name || !email) { toast('Name and email are required', 'error'); return; }
+
+  const payload = {
+    name, email,
+    phone:   document.getElementById('m-phone').value.trim() || null,
+    address: document.getElementById('m-address').value.trim() || null,
+    status:  document.getElementById('m-status').value,
+  };
+
+  if (useMock) {
+    if (id) {
+      const idx = MOCK.members.findIndex(m=>m.id===id);
+      if (idx>=0) Object.assign(MOCK.members[idx], payload);
+      toast('Member updated (demo mode)', 'success');
+    } else {
+      MOCK.members.push({id: Date.now(), ...payload, active_loans:0, joined_at: new Date().toISOString()});
+      toast('Member added (demo mode)', 'success');
+    }
+    closeModal(); renderMembers(); return;
+  }
+
+  try {
+    if (id) {
+      await api(`/members/${id}`, { method:'PUT', body: payload });
+      toast('Member updated', 'success');
+    } else {
+      await api('/members', { method:'POST', body: payload });
+      toast('Member added', 'success');
+    }
+    closeModal(); renderMembers();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function deleteMember(id, name) {
+  if (!confirm(`Delete member "${name}"?`)) return;
+  if (useMock) {
+    const m = MOCK.members.find(m=>m.id===id);
+    if (m?.active_loans > 0) { toast('Cannot delete member with active loans', 'error'); return; }
+    MOCK.members = MOCK.members.filter(m=>m.id!==id);
+    toast('Member deleted (demo mode)', 'success');
+    renderMembers(); return;
+  }
+  try {
+    await api(`/members/${id}`, { method:'DELETE' });
+    toast('Member deleted', 'success');
+    renderMembers();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOANS
+// ═══════════════════════════════════════════════════════════
+let loanTab = 'active';
+async function renderLoans(tab = loanTab) {
+  loanTab = tab;
+  const loans = await fetchData('loans', `status=${tab}`);
+
+  setContent(`
+    <div class="page-header">
+      <div>
+        <div class="page-title">Loan Management</div>
+        <div class="page-sub">Track book circulation</div>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-primary" onclick="openIssueLoanModal()">+ Issue Book</button>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 mb-4" style="margin-bottom:20px">
+      <div class="tabs">
+        <div class="tab ${tab==='active'?'active':''}" onclick="renderLoans('active')">Active</div>
+        <div class="tab ${tab==='overdue'?'active':''}" onclick="renderLoans('overdue')">Overdue</div>
+        <div class="tab ${tab===''?'active':''}" onclick="renderLoans('')">All</div>
+        <div class="tab ${tab==='returned'?'active':''}" onclick="renderLoans('returned')">Returned</div>
+      </div>
+      <span class="text-sm text-muted">${loans.length} record${loans.length!==1?'s':''}</span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Book</th><th>Member</th><th>Issued</th><th>Due Date</th><th>Status</th><th>Fine (₨)</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          ${loans.length ? loans.map(l => {
+            const isOverdue = !l.returned_at && l.days_overdue > 0;
+            return `
+          <tr>
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="book-cover" style="background:${l.cover_color}22;color:${l.cover_color}">📖</div>
+                <div class="fw-600 truncate" style="max-width:180px">${l.book_title}</div>
+              </div>
+            </td>
+            <td>
+              <div class="flex items-center gap-2">
+                <div class="avatar" style="background:${avatarColor(l.member_name)};width:28px;height:28px;font-size:0.7rem">${initials(l.member_name)}</div>
+                <div>
+                  <div class="text-sm fw-600">${l.member_name}</div>
+                  <div class="text-xs text-muted">${l.member_email}</div>
+                </div>
+              </div>
+            </td>
+            <td class="text-sm text-muted">${formatDate(l.issued_at)}</td>
+            <td class="text-sm ${isOverdue?'text-red fw-600':''}">
+              ${formatDate(l.due_date)}
+              ${isOverdue ? `<div class="text-xs" style="color:var(--red)">${l.days_overdue}d overdue</div>` : ''}
+            </td>
+            <td>
+              ${l.returned_at
+                ? '<span class="badge badge-green">Returned</span>'
+                : isOverdue
+                  ? '<span class="badge badge-red">Overdue</span>'
+                  : '<span class="badge badge-blue">Active</span>'}
+            </td>
+            <td>
+              ${l.computed_fine > 0
+                ? `<span class="fine-amount">₨ ${l.computed_fine}${l.fine_paid?' <span class="badge badge-green" style="font-size:0.65rem">paid</span>':''}</span>`
+                : '<span class="text-muted text-sm">—</span>'}
+            </td>
+            <td>
+              ${!l.returned_at ? `<button class="btn btn-success btn-sm" onclick="returnLoan(${l.id})">↩ Return</button>` : '<span class="text-muted text-xs">—</span>'}
+            </td>
+          </tr>`}).join('') : `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🔄</div><div class="empty-title">No ${tab} loans</div></div></td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `);
+}
+
+async function returnLoan(id) {
+  if (!confirm('Mark this book as returned?')) return;
+  if (useMock) {
+    const loan = MOCK.loans.find(l=>l.id===id);
+    if (loan) { loan.returned_at = new Date().toISOString(); }
+    toast(`Book returned${loan?.computed_fine>0?' — Fine: ₨ '+loan.computed_fine:''}`, 'success');
+    renderLoans(loanTab); return;
+  }
+  try {
+    const res = await api(`/loans/${id}/return`, { method:'PUT' });
+    toast(`Book returned${res.fine_amount>0?' — Fine: ₨ '+res.fine_amount:''}`, 'success');
+    renderLoans(loanTab);
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function openIssueLoanModal() {
+  const [books, members] = await Promise.all([
+    fetchData('books'),
+    fetchData('members', 'status=active')
+  ]);
+  const available = books.filter(b => b.available_copies > 0);
+  const twoWeeks = new Date(); twoWeeks.setDate(twoWeeks.getDate() + 14);
+  const dueDefault = twoWeeks.toISOString().split('T')[0];
+
+  showModal('Issue Book', `
+    <div class="form-group">
+      <label class="form-label">Book *</label>
+      <select class="form-select" id="l-book">
+        <option value="">— Select book —</option>
+        ${available.map(b=>`<option value="${b.id}">${b.title} (${b.available_copies} available)</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Member *</label>
+      <select class="form-select" id="l-member">
+        <option value="">— Select member —</option>
+        ${members.map(m=>`<option value="${m.id}">${m.name} — ${m.email}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Due Date *</label>
+      <input class="form-input" id="l-due" type="date" value="${dueDefault}" min="${new Date().toISOString().split('T')[0]}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-textarea" id="l-notes" placeholder="Optional notes…" style="min-height:70px"></textarea>
+    </div>
+  `, [
+    { label: 'Issue Book', cls: 'btn-primary', action: saveIssueLoan },
+    { label: 'Cancel', cls: 'btn-ghost', action: closeModal }
+  ]);
+}
+
+async function saveIssueLoan() {
+  const book_id   = document.getElementById('l-book').value;
+  const member_id = document.getElementById('l-member').value;
+  const due_date  = document.getElementById('l-due').value;
+  if (!book_id || !member_id || !due_date) { toast('All fields are required', 'error'); return; }
+
+  if (useMock) {
+    const book = MOCK.books.find(b=>b.id==book_id);
+    const member = MOCK.members.find(m=>m.id==member_id);
+    if (book) book.available_copies--;
+    MOCK.loans.unshift({
+      id: Date.now(), book_title: book?.title, cover_color: book?.cover_color,
+      member_name: member?.name, member_email: member?.email,
+      issued_at: new Date().toISOString(), due_date, returned_at: null,
+      computed_fine: 0, days_overdue: 0, fine_paid: 0
+    });
+    toast('Book issued successfully (demo mode)', 'success');
+    closeModal(); navigate('loans'); return;
+  }
+
+  try {
+    await api('/loans', { method:'POST', body: { book_id: parseInt(book_id), member_id: parseInt(member_id), due_date, notes: document.getElementById('l-notes').value || null }});
+    toast('Book issued successfully', 'success');
+    closeModal(); navigate('loans');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// OVERDUE
+// ═══════════════════════════════════════════════════════════
+async function renderOverdue() {
+  const loans = await fetchData('loans', 'status=overdue');
+
+  const totalFines = loans.reduce((s, l) => s + (l.computed_fine || 0), 0);
+
+  setContent(`
+    ${loans.length > 0 ? `
+    <div class="overdue-banner">
+      <div class="overdue-banner-icon">🚨</div>
+      <div class="overdue-banner-text">${loans.length} overdue book${loans.length>1?'s':', worth'} — Total fines: <strong>₨ ${totalFines}</strong></div>
+    </div>` : ''}
+
+    <div class="page-header">
+      <div>
+        <div class="page-title">Overdue Books</div>
+        <div class="page-sub">Books past their due date</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Book</th><th>Member</th><th>Contact</th><th>Due Date</th><th>Days Overdue</th><th>Fine (₨)</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+          ${loans.length ? loans.sort((a,b)=>b.days_overdue-a.days_overdue).map(l => `
+          <tr>
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="book-cover" style="background:${l.cover_color}22;color:${l.cover_color}">📖</div>
+                <div class="fw-600">${l.book_title}</div>
+              </div>
+            </td>
+            <td>
+              <div class="flex items-center gap-2">
+                <div class="avatar" style="background:${avatarColor(l.member_name)};width:28px;height:28px;font-size:0.7rem">${initials(l.member_name)}</div>
+                <span class="fw-600">${l.member_name}</span>
+              </div>
+            </td>
+            <td class="mono text-sm text-2">${l.member_email}</td>
+            <td class="fw-600" style="color:var(--red)">${formatDate(l.due_date)}</td>
+            <td>
+              <span class="badge badge-red">${l.days_overdue} day${l.days_overdue!==1?'s':''}</span>
+            </td>
+            <td><span class="fine-amount">₨ ${l.computed_fine}</span></td>
+            <td><button class="btn btn-success btn-sm" onclick="returnLoan(${l.id})">↩ Return</button></td>
+          </tr>
+          `).join('') : `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">No overdue books!</div><div class="empty-sub">All loans are within their due dates</div></div></td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `);
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTHORS
+// ═══════════════════════════════════════════════════════════
+async function renderAuthors() {
+  const authors = await fetchData('authors');
+  setContent(`
+    <div class="page-header">
+      <div><div class="page-title">Authors</div><div class="page-sub">${authors.length} authors</div></div>
+      <button class="btn btn-primary" onclick="openAuthorModal()">+ Add Author</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Nationality</th><th>Bio</th></tr></thead>
+        <tbody>
+          ${authors.map(a=>`
+          <tr>
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="avatar" style="background:${avatarColor(a.name)}">${initials(a.name)}</div>
+                <div class="fw-600">${a.name}</div>
+              </div>
+            </td>
+            <td><span class="badge badge-purple">${a.nationality || '—'}</span></td>
+            <td class="text-sm text-2">${a.bio || '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `);
+}
+
+function openAuthorModal() {
+  showModal('Add Author', `
+    <div class="form-group"><label class="form-label">Name *</label><input class="form-input" id="a-name" placeholder="Author name"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Nationality</label><input class="form-input" id="a-nat" placeholder="e.g. British"></div>
+      <div></div>
+    </div>
+    <div class="form-group"><label class="form-label">Bio</label><textarea class="form-textarea" id="a-bio" placeholder="Short bio…"></textarea></div>
+  `, [
+    { label: 'Add Author', cls: 'btn-primary', action: saveAuthor },
+    { label: 'Cancel', cls: 'btn-ghost', action: closeModal }
+  ]);
+}
+
+async function saveAuthor() {
+  const name = document.getElementById('a-name').value.trim();
+  if (!name) { toast('Name is required','error'); return; }
+  const payload = { name, nationality: document.getElementById('a-nat').value.trim()||null, bio: document.getElementById('a-bio').value.trim()||null };
+  if (useMock) {
+    MOCK.authors.push({id: Date.now(), ...payload});
+    toast('Author added (demo mode)','success');
+    closeModal(); renderAuthors(); return;
+  }
+  try {
+    await api('/authors', { method:'POST', body: payload });
+    toast('Author added','success');
+    closeModal(); renderAuthors();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// CATEGORIES
+// ═══════════════════════════════════════════════════════════
+async function renderCategories() {
+  const cats = await fetchData('categories');
+  setContent(`
+    <div class="page-header">
+      <div><div class="page-title">Categories</div><div class="page-sub">${cats.length} categories</div></div>
+      <button class="btn btn-primary" onclick="openCategoryModal()">+ Add Category</button>
+    </div>
+    <div class="grid-3" style="margin-top:4px">
+      ${cats.map(c=>`
+      <div class="card card-sm" style="border-top:3px solid ${c.color}">
+        <div class="flex items-center gap-3 mb-2">
+          <div style="width:36px;height:36px;border-radius:10px;background:${c.color}22;display:flex;align-items:center;justify-content:center;font-size:1.1rem">🏷️</div>
+          <div class="fw-600">${c.name}</div>
+        </div>
+        <div class="text-sm text-muted">${c.description || 'No description'}</div>
+      </div>`).join('')}
+    </div>
+  `);
+}
+
+function openCategoryModal() {
+  showModal('Add Category', `
+    <div class="form-group"><label class="form-label">Name *</label><input class="form-input" id="cat-name" placeholder="Category name"></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="cat-desc" placeholder="What kind of books?"></textarea></div>
+    <div class="form-group">
+      <label class="form-label">Color</label>
+      <div class="color-picker" id="cat-colors">
+        ${COLORS.map((c,i)=>`<div class="color-swatch ${i===0?'selected':''}" style="background:${c}" onclick="selectColor('${c}')" data-color="${c}"></div>`).join('')}
+      </div>
+    </div>
+  `, [
+    { label: 'Add Category', cls: 'btn-primary', action: saveCategory },
+    { label: 'Cancel', cls: 'btn-ghost', action: closeModal }
+  ]);
+}
+
+async function saveCategory() {
+  const name = document.getElementById('cat-name').value.trim();
+  if (!name) { toast('Name is required','error'); return; }
+  const sel = document.querySelector('.color-swatch.selected');
+  const payload = { name, description: document.getElementById('cat-desc').value.trim()||null, color: sel?.dataset.color || '#6366f1' };
+  if (useMock) {
+    MOCK.categories.push({id: Date.now(), ...payload});
+    toast('Category added (demo mode)','success');
+    closeModal(); renderCategories(); return;
+  }
+  try {
+    await api('/categories', { method:'POST', body: payload });
+    toast('Category added','success');
+    closeModal(); renderCategories();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MODAL SYSTEM
+// ═══════════════════════════════════════════════════════════
+function showModal(title, body, actions = []) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-footer').innerHTML = actions.map((a,i) =>
+    `<button class="btn ${a.cls}" onclick="window.__modalActions[${i}]()">${a.label}</button>`
+  ).join('');
+  window.__modalActions = actions.map(a => a.action);
+  document.getElementById('modal-overlay').style.display = 'flex';
+  setTimeout(() => document.querySelector('.form-input')?.focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+}
+
+function closeModalOnOverlay(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════
+function toast(msg, type = 'info') {
+  const icons = { success:'✅', error:'❌', info:'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 3500);
+}
+
+// ═══════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════
+function formatDate(str) {
+  if (!str) return '—';
+  try {
+    return new Date(str).toLocaleDateString('en-PK', { day:'numeric', month:'short', year:'numeric' });
+  } catch { return str.slice(0,10); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+(async () => {
+  await checkHealth();
+  navigate('dashboard');
+})();
+</script>
+</body>
+</html>
