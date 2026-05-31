@@ -12,7 +12,8 @@ app.use(cors());
 app.use(express.json());
 
 // ── Database Setup ──────────────────────────────────────────
-const DB_PATH = path.join(__dirname, '..', 'database', 'libraflow.db');
+const DB_DIR = path.join(__dirname, '..', 'database');
+const DB_PATH = path.join(DB_DIR, 'libraflow.db');
 
 function getDb() {
   const db = new Database(DB_PATH);
@@ -21,10 +22,33 @@ function getDb() {
   return db;
 }
 
-// Auto-init DB if not exists
-if (!fs.existsSync(DB_PATH)) {
-  require('./scripts/initDb');
+function ensureDb() {
+  fs.mkdirSync(DB_DIR, { recursive: true });
+  const needsInit = !fs.existsSync(DB_PATH);
+  if (needsInit) {
+    require('./scripts/initDb');
+    return;
+  }
+
+  let db;
+  try {
+    db = new Database(DB_PATH, { readonly: true });
+    const row = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='books'").get();
+    if (!row) {
+      db.close();
+      require('./scripts/initDb');
+    }
+  } catch (err) {
+    if (db) db.close();
+    console.warn('⚠️  Database invalid or uninitialized, reinitializing...', err.message);
+    require('./scripts/initDb');
+  } finally {
+    if (db) db.close();
+  }
 }
+
+// Ensure the DB exists and is initialized
+ensureDb();
 
 // ── Helper: calculate fine ──────────────────────────────────
 function calcFine(dueDate, returnedAt = null) {

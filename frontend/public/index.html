@@ -1024,6 +1024,10 @@ async function openBookModal(book = null) {
         <label class="form-label">ISBN</label>
         <input class="form-input" id="b-isbn" value="${book?.isbn || ''}" placeholder="978-…">
       </div>
+      <div class="form-group">
+        <label class="form-label">Author</label>
+        <input class="form-input" id="b-authors" value="${book?.authors || ''}" placeholder="Author names (comma-separated)">
+      </div>
     </div>
     <div class="form-row">
       <div class="form-group">
